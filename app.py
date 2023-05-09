@@ -17,6 +17,7 @@ if __name__ == '__main__':
 
 @socketio.on('client_connected')
 def handle_client_connected(data):
-    client_ip = request.remote_addr
+    client_ip = request.headers.get('CF-Connecting-IP', request.remote_addr)
     client_port = request.environ.get('REMOTE_PORT')
     emit('client_info', {'ip_address': client_ip, 'port': client_port})
+    print(f'ip_address: {client_ip}, port: {client_port}')
