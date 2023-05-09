@@ -20,3 +20,4 @@ def handle_client_connected(data):
     client_ip = request.remote_addr
     client_port = request.environ.get('REMOTE_PORT')
     emit('client_info', {'ip_address': client_ip, 'port': client_port})
+    print(f'ip_address: {client_ip}, port: {client_port}')
