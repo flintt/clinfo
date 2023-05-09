@@ -6,17 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real-time IP Address and Port</title>
     <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
-    <script>
-        const socket = io.connect('//'+ document.domain + ':' + location.port);
+    <script src="../static/client.js"></script>
 
-        socket.on('connect', () => {
-            socket.emit('client_connected', {data: 'Client connected!'});
-        });
-
-        socket.on('client_info', (data) => {
-            document.getElementById('client-info').innerHTML = 'IP Address: ' + data.ip_address + '<br>Port: ' + data.port;
-        });
-    </script>
 </head>
 <body>
     <h1>Real-time IP Address and Port</h1>
