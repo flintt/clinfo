@@ -7,7 +7,7 @@
     <title>Real-time IP Address and Port</title>
     <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
     <script>
-        const socket = io.connect('http://' + document.domain + ':' + location.port);
+        const socket = io.connect('//'+ document.domain + ':' + location.port);
 
         socket.on('connect', () => {
             socket.emit('client_connected', {data: 'Client connected!'});
