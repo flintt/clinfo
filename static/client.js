@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
       clientInfoDiv.innerHTML = history
           .map((item, index) => {
               const timeString = item.timestamp.toLocaleString();
-              return `<p>${index + 1}. (${timeString}) IP Address: ${item.ip_address}, Port: ${item.port}, Delay: ${item.delay}s</p>`;
+              return `<p>${index + 1}. (${timeString}) IP Address: ${item.ip_address}, Port: ${item.port}, Delay: ${item.delay}ms</p>`;
           })
           .join("");
   }
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const timestamp = new Date();
 
       // 将新的客户端信息和时间戳添加到历史记录数组中
-      history.push({ ip_address, port, timestamp, delay: null });
+      history.push({ ip_address, port, timestamp, delay: 0 });
 
       // 保持历史记录数组的长度为10
       if (history.length > 10) {
@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   socket.on('pong_event', (data) => {
       const client_receive_time = new Date().getTime();
-      const round_trip_time = (client_receive_time - socket.sendTimestamp) / 1000;
+      const round_trip_time = (client_receive_time - socket.sendTimestamp) ;
       // console.log("Round trip time:", round_trip_time, "seconds");
 
       // 更新历史记录数组中最后一项的时延
