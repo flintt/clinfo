@@ -1,6 +1,7 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 from flask import request
+from datetime import datetime
 app = Flask(__name__)
 
 app.secret_key = 'your_secret_key'  # 请替换为您自己的密钥
@@ -20,4 +21,4 @@ def handle_client_connected(data):
     client_ip = request.headers.get('CF-Connecting-IP', request.remote_addr)
     client_port = request.environ.get('REMOTE_PORT')
     emit('client_info', {'ip_address': client_ip, 'port': client_port})
-    print(f'ip_address: {client_ip}, port: {client_port}')
+    print(f'time: {datetime.now()}, ip_address: {client_ip}, port: {client_port}')
