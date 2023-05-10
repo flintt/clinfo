@@ -22,3 +22,8 @@ def handle_client_connected(data):
     client_port = request.environ.get('REMOTE_PORT')
     emit('client_info', {'ip_address': client_ip, 'port': client_port})
     print(f'time: {datetime.now()}, ip_address: {client_ip}, port: {client_port}')
+
+@socketio.on('ping_event')
+def handle_ping_event():
+    emit('pong_event')
+    
