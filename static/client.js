@@ -52,5 +52,5 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // 每隔5秒发送一次 ping_event 以获取时延
-  setInterval(sendPing, 5000);
+  setInterval(sendPing, 1000);
 });
