@@ -22,8 +22,11 @@ def handle_client_connected(data):
     client_ip = request.headers.get('CF-Connecting-IP', request.remote_addr)
     client_port = request.environ.get('REMOTE_PORT')
     client_sid = request.sid
+    # 记录连接时间
+    connect_time = datetime.now()
+    
     # 将客户端信息与会话 ID 关联
-    connected_clients[client_sid] = {'ip_address': client_ip, 'port': client_port}
+    connected_clients[client_sid] = {'ip_address': client_ip, 'port': client_port, 'connect_time': connect_time}
     print(f'{datetime.now()}: Client connected: IP {client_ip}, Port {client_port}')
     # 发送客户端信息
     emit('client_info', {'ip_address': client_ip, 'port': client_port})
@@ -35,7 +38,12 @@ def handle_disconnect():
     if client_info:
         client_ip = client_info['ip_address']
         client_port = client_info['port']
-        print(f'{datetime.now()}: Client disconnected: IP {client_ip}, Port {client_port}')
+        connect_time = client_info['connect_time']
+
+        # 计算连接时长
+        disconnect_time = datetime.now()
+        duration = disconnect_time - connect_time
+        print(f'{datetime.now()}: Client disconnected: IP {client_ip}, Port {client_port}, Connected Duration {duration}')
         # 从字典中移除断开连接的客户端
         del connected_clients[client_sid]
     else:
