@@ -4,14 +4,25 @@ document.addEventListener("DOMContentLoaded", function () {
   const clientInfoDiv = document.getElementById("client-info");
   const history = [];
 
-  function updateDisplay() {
-      clientInfoDiv.innerHTML = history
-          .map((item, index) => {
-              const timeString = item.timestamp.toLocaleString();
-              return `<p>${index + 1}. (${timeString}) IP Address: ${item.ip_address}, Port: ${item.port}, Delay: ${item.delay}ms</p>`;
-          })
-          .join("");
-  }
+    function updateDisplay() {
+        clientInfoDiv.innerHTML = history
+            .map((item, index) => {
+                const timeString = item.timestamp.toLocaleString();
+                return `<p>${index + 1}. (${timeString}) IP Address: ${item.ip_address}, City: ${item.city}, Port: ${item.port}, Delay: ${item.delay}ms</p>`;
+            })
+            .join("");
+    }
+
+    async function getCity(ip_address) {
+        try {
+            const response = await fetch(`https://ipinfo.io/${ip_address}/json`);
+            const data = await response.json();
+            return data.city || 'Unknown';
+        } catch (error) {
+            console.error('Error fetching city information:', error);
+            return 'Unknown';
+        }
+    }
 
   function sendPing() {
       const client_send_time = new Date().getTime();
@@ -24,12 +35,13 @@ document.addEventListener("DOMContentLoaded", function () {
       socket.emit('client_connected', {data: 'Client connected!'});
   });
 
-  socket.on("client_info", (data) => {
-      const { ip_address, port } = data;
-      const timestamp = new Date();
+    socket.on("client_info", async (data) => {
+        const { ip_address, port } = data;
+        const timestamp = new Date();
+        const city = await getCity(ip_address);
 
       // 将新的客户端信息和时间戳添加到历史记录数组中
-      history.push({ ip_address, port, timestamp, delay: 0 });
+        history.push({ ip_address, port, city, timestamp, delay: 0 });
 
       // 保持历史记录数组的长度为10
       if (history.length > 10) {
@@ -52,5 +64,6 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // 每隔5秒发送一次 ping_event 以获取时延
-  setInterval(sendPing, 1000);
+  setInterval(sendPing, 5000);
 });
+
