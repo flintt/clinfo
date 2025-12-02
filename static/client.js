@@ -52,6 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <td>${item.ip_address}</td>
                     <td>${item.city}</td>
                     <td>${item.port}</td>
+                    <td>${item.avgLatency}</td>
                 </tr>
             `;
         }).join("");
@@ -87,7 +88,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Add to History
         const timestamp = new Date();
-        history.push({ ip_address, port, city, timestamp });
+        history.push({
+            ip_address,
+            port,
+            city,
+            timestamp,
+            // Track latency stats for this session
+            totalLatency: 0,
+            pingCount: 0,
+            avgLatency: '-- ms'
+        });
 
         // Keep history manageable (last 10 entries)
         if (history.length > 10) {
@@ -101,6 +111,20 @@ document.addEventListener("DOMContentLoaded", function () {
             const client_receive_time = new Date().getTime();
             const latency = client_receive_time - payload.timestamp;
             latencyDisplay.innerText = `${latency} ms`;
+
+            // Update average latency for the active session (latest in history)
+            if (history.length > 0) {
+                const activeSession = history[history.length - 1];
+                // Only update if this session matches the current connection (simple heuristic: it's the last one)
+                // In a more complex app, we might check session IDs, but here active is always last.
+
+                activeSession.totalLatency += latency;
+                activeSession.pingCount += 1;
+                const avg = Math.round(activeSession.totalLatency / activeSession.pingCount);
+                activeSession.avgLatency = `${avg} ms`;
+
+                renderHistory();
+            }
         }
     });
 
