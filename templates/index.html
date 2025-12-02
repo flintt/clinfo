@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Network Diagnostic Tool</title>
     <link href="{{ url_for('static', filename='bootstrap.min.css') }}" rel="stylesheet">
-    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='socket.io.min.js') }}"></script>
     <script src="{{ url_for('static', filename='client.js') }}"></script>
     <style>
         .latency-value { font-size: 2rem; font-weight: bold; }
