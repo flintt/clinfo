@@ -12,7 +12,9 @@ app = Flask(__name__)
 # Use environment variable for secret key with a default fallback
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key!ChangeMe')
 
-socketio = SocketIO(app)
+# Explicitly set async_mode to 'gevent' to ensure compatibility with Gunicorn gevent worker
+# even if eventlet is installed in the environment.
+socketio = SocketIO(app, async_mode='gevent')
 
 # Store connected clients (In-memory storage)
 connected_clients = {}
