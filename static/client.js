@@ -12,17 +12,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // State
     const history = [];
-    let cachedCity = null;
+    const cityCache = {};
 
     // Helper: Get City from IP (Client-side)
     async function getCity(ip_address) {
-        if (cachedCity) return cachedCity;
+        if (cityCache[ip_address]) return cityCache[ip_address];
         try {
             const response = await fetch(`https://ipinfo.io/${ip_address}/json`);
             if (!response.ok) throw new Error("Network response was not ok");
             const data = await response.json();
-            cachedCity = data.city || 'Unknown';
-            return cachedCity;
+            const city = data.city || 'Unknown';
+            cityCache[ip_address] = city;
+            return city;
         } catch (error) {
             console.error('Error fetching city information:', error);
             return 'Unknown';

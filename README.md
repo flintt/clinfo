@@ -59,9 +59,9 @@ For production environments, it is recommended to use Gunicorn with an asynchron
 
 2.  **Run with Gunicorn**:
     ```bash
-    gunicorn -k gevent -w 1 -b 0.0.0.0:12345 app:app
+    gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 -b 0.0.0.0:12345 app:app
     ```
-    *   `-k gevent`: Uses the Gevent worker class for optimal WebSocket performance.
+    *   `-k geventwebsocket.gunicorn.workers.GeventWebSocketWorker`: Uses the dedicated Gevent WebSocket worker for full compatibility.
     *   `-w 1`: Uses 1 worker (recommended for Flask-SocketIO unless using a message queue).
     *   `-b 0.0.0.0:12345`: Binds to port 12345 on all interfaces.
 
