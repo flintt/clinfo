@@ -1,79 +1,147 @@
-// 当文档加载完毕时执行此函数
 document.addEventListener("DOMContentLoaded", function () {
-    // 连接到当前域名和端口上的 Socket.IO 服务器
-    const socket = io.connect('//'+ document.domain + ':' + location.port);
-  
-    // 获取显示客户端信息的 HTML 元素
-    const clientInfoDiv = document.getElementById("client-info");
-    // 历史记录数组，用于存储客户端信息
+    // Connect to the Socket.IO server
+    const socket = io.connect('//' + document.domain + ':' + location.port);
+
+    // DOM Elements
+    const statusBadge = document.getElementById("connection-status");
+    const currentIpEl = document.getElementById("current-ip");
+    const currentCityEl = document.getElementById("current-city");
+    const currentPortEl = document.getElementById("current-port");
+    const latencyDisplay = document.getElementById("latency-display");
+    const historyTableBody = document.getElementById("history-table-body");
+
+    // State
     const history = [];
-  
-    // 更新页面显示的函数
-    function updateDisplay() {
-      // 更新clientInfoDiv的HTML内容
-      clientInfoDiv.innerHTML = history
-        .map((item, index) => {
-          const timeString = item.timestamp.toLocaleString();
-          return `<p>${index + 1}. (${timeString}) IP Address: ${item.ip_address}, City: ${item.city}, Port: ${item.port}, Delay: ${item.delay}ms</p>`;
-        })
-        .join("");
-    }
-  
-    // 异步函数，根据IP地址获取城市信息
+    let cachedCity = null;
+
+    // Helper: Get City from IP (Client-side)
     async function getCity(ip_address) {
-      try {
-        const response = await fetch(`https://ipinfo.io/${ip_address}/json`);
-        const data = await response.json();
-        return data.city || 'Unknown';
-      } catch (error) {
-        console.error('Error fetching city information:', error);
-        return 'Unknown';
-      }
+        if (cachedCity) return cachedCity;
+        try {
+            const response = await fetch(`https://ipinfo.io/${ip_address}/json`);
+            if (!response.ok) throw new Error("Network response was not ok");
+            const data = await response.json();
+            cachedCity = data.city || 'Unknown';
+            return cachedCity;
+        } catch (error) {
+            console.error('Error fetching city information:', error);
+            return 'Unknown';
+        }
     }
-  
-    // 发送ping事件的函数
-    function sendPing() {
-      const client_send_time = new Date().getTime();
-      socket.sendTimestamp = client_send_time;
-      socket.emit('ping_event');
+
+    // Helper: Update Status Badge
+    function updateStatus(connected) {
+        if (connected) {
+            statusBadge.textContent = "Connected";
+            statusBadge.classList.replace("bg-secondary", "bg-success");
+            statusBadge.classList.replace("bg-danger", "bg-success");
+        } else {
+            statusBadge.textContent = "Disconnected";
+            statusBadge.classList.replace("bg-success", "bg-danger");
+        }
     }
-  
-    // 当与服务器连接成功时执行
+
+    // Helper: Calculate Median
+    function calculateMedian(values) {
+        if (values.length === 0) return 0;
+        const sorted = [...values].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+
+    // Helper: Render History Table
+    function renderHistory() {
+        historyTableBody.innerHTML = history.map((item, index) => {
+            const timeString = item.timestamp.toLocaleTimeString();
+            return `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${timeString}</td>
+                    <td>${item.ip_address}</td>
+                    <td>${item.city}</td>
+                    <td>${item.port}</td>
+                    <td>${item.medianLatency}</td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    // --- Socket Events ---
+
     socket.on('connect', () => {
-      sendPing();
-      socket.emit('client_connected', {data: 'Client connected!'});
+        console.log("Connected to server");
+        updateStatus(true);
+        // Reset latency display on new connection
+        latencyDisplay.innerText = "-- ms";
+
+        // Notify server
+        socket.emit('client_connected', { data: 'Client connected!' });
     });
-  
-    // 处理从服务器收到的客户端信息
-    socket.on("client_info", async (data) => {
-      const { ip_address, port } = data;
-      const timestamp = new Date();
-      const city = await getCity(ip_address);
-  
-      // 添加新的客户端信息到历史记录数组
-      history.push({ ip_address, port, city, timestamp, delay: 0 });
-  
-      // 如果历史记录超过10条，移除最旧的一条
-      if (history.length > 10) {
-        history.shift();
-      }
-  
-      updateDisplay();
+
+    socket.on('disconnect', () => {
+        console.log("Disconnected from server");
+        updateStatus(false);
     });
-  
-    // 当收到pong事件时，计算往返延迟
-    socket.on('pong_event', (data) => {
-      const client_receive_time = new Date().getTime();
-      const round_trip_time = client_receive_time - socket.sendTimestamp;
-  
-      // 更新最新的历史记录条目的延迟信息
-      if (history.length > 0) {
-        history[history.length - 1].delay = round_trip_time;
-        updateDisplay();
-      }
+
+    socket.on('client_info', async (data) => {
+        const { ip_address, port } = data;
+
+        // Fetch city (or use cache)
+        const city = await getCity(ip_address);
+
+        // Update Current Info Card
+        currentIpEl.innerText = ip_address;
+        currentCityEl.innerText = city;
+        currentPortEl.innerText = port;
+
+        // Add to History
+        const timestamp = new Date();
+        history.push({
+            ip_address,
+            port,
+            city,
+            timestamp,
+            // Track latency samples for this session
+            latencies: [],
+            medianLatency: '-- ms'
+        });
+
+        // Keep history manageable (last 10 entries)
+        if (history.length > 10) {
+            history.shift();
+        }
+        renderHistory();
     });
-  
-    // 每隔1秒发送一次ping事件以获取时延
+
+    socket.on('pong_event', (payload) => {
+        if (payload && payload.timestamp) {
+            const client_receive_time = new Date().getTime();
+            const latency = client_receive_time - payload.timestamp;
+            latencyDisplay.innerText = `${latency} ms`;
+
+            // Update median latency for the active session (latest in history)
+            if (history.length > 0) {
+                const activeSession = history[history.length - 1];
+
+                activeSession.latencies.push(latency);
+                const median = Math.round(calculateMedian(activeSession.latencies));
+                activeSession.medianLatency = `${median} ms`;
+
+                renderHistory();
+            }
+        }
+    });
+
+    // --- Ping Loop ---
+
+    function sendPing() {
+        if (socket.connected) {
+            const timestamp = new Date().getTime();
+            // Send timestamp as payload
+            socket.emit('ping_event', { timestamp: timestamp });
+        }
+    }
+
+    // Ping every 1 second
     setInterval(sendPing, 1000);
-  });
-  
+});
