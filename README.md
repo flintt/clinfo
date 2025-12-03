@@ -2,7 +2,8 @@
 
 A real-time network monitoring application built with Flask, Socket.IO, and Bootstrap 5. This tool provides instant feedback on client connection details including IP address, city (geolocation), port, and latency.
 
-![Network Diagnostic Tool UI](https://via.placeholder.com/800x400?text=Network+Diagnostic+Tool+Screenshot)
+<img width="1280" height="720" alt="image" src="https://github.com/user-attachments/assets/d6435e1c-a9f0-4642-9768-552c7e344d7d" />
+
 
 ## Features
 
