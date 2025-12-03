@@ -9,7 +9,7 @@ A real-time network monitoring application built with Flask, Socket.IO, and Boot
 
 *   **Real-time Monitoring**: Instantly detects client IP, remote port, and connection status.
 *   **Latency Tracking**: continuously measures round-trip time (ping) between the client and server.
-*   **Average Latency**: Calculates and displays the average latency for the current session.
+*   **Median Latency**: Calculates and displays the median latency for the current session (robust to outliers).
 *   **Geolocation**: Automatically resolves the client's city based on their IP address (using ipinfo.io).
 *   **Modern UI**: Clean, responsive interface built with Bootstrap 5.
 *   **Connection History**: Keeps a log of recent connections with their statistics.

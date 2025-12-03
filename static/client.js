@@ -41,6 +41,14 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    // Helper: Calculate Median
+    function calculateMedian(values) {
+        if (values.length === 0) return 0;
+        const sorted = [...values].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+
     // Helper: Render History Table
     function renderHistory() {
         historyTableBody.innerHTML = history.map((item, index) => {
@@ -52,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <td>${item.ip_address}</td>
                     <td>${item.city}</td>
                     <td>${item.port}</td>
-                    <td>${item.avgLatency}</td>
+                    <td>${item.medianLatency}</td>
                 </tr>
             `;
         }).join("");
@@ -93,10 +101,9 @@ document.addEventListener("DOMContentLoaded", function () {
             port,
             city,
             timestamp,
-            // Track latency stats for this session
-            totalLatency: 0,
-            pingCount: 0,
-            avgLatency: '-- ms'
+            // Track latency samples for this session
+            latencies: [],
+            medianLatency: '-- ms'
         });
 
         // Keep history manageable (last 10 entries)
@@ -112,16 +119,13 @@ document.addEventListener("DOMContentLoaded", function () {
             const latency = client_receive_time - payload.timestamp;
             latencyDisplay.innerText = `${latency} ms`;
 
-            // Update average latency for the active session (latest in history)
+            // Update median latency for the active session (latest in history)
             if (history.length > 0) {
                 const activeSession = history[history.length - 1];
-                // Only update if this session matches the current connection (simple heuristic: it's the last one)
-                // In a more complex app, we might check session IDs, but here active is always last.
 
-                activeSession.totalLatency += latency;
-                activeSession.pingCount += 1;
-                const avg = Math.round(activeSession.totalLatency / activeSession.pingCount);
-                activeSession.avgLatency = `${avg} ms`;
+                activeSession.latencies.push(latency);
+                const median = Math.round(calculateMedian(activeSession.latencies));
+                activeSession.medianLatency = `${median} ms`;
 
                 renderHistory();
             }
