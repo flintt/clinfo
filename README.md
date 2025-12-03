@@ -50,18 +50,18 @@ python app.py
 The application will be available at `http://localhost:12345`.
 
 ### Production (Gunicorn)
-For production environments, it is recommended to use Gunicorn with an asynchronous worker class like `eventlet` to support WebSocket concurrency.
+For production environments, it is recommended to use Gunicorn with an asynchronous worker class like `gevent` to support WebSocket concurrency.
 
-1.  **Install Eventlet**:
+1.  **Install Gevent**:
     ```bash
-    pip install eventlet
+    pip install gevent gevent-websocket
     ```
 
 2.  **Run with Gunicorn**:
     ```bash
-    gunicorn -k eventlet -w 1 -b 0.0.0.0:12345 app:app
+    gunicorn -k gevent -w 1 -b 0.0.0.0:12345 app:app
     ```
-    *   `-k eventlet`: Uses the Eventlet worker class for optimal WebSocket performance.
+    *   `-k gevent`: Uses the Gevent worker class for optimal WebSocket performance.
     *   `-w 1`: Uses 1 worker (recommended for Flask-SocketIO unless using a message queue).
     *   `-b 0.0.0.0:12345`: Binds to port 12345 on all interfaces.
 
