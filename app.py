@@ -3,6 +3,8 @@ import logging
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 from datetime import datetime
+import atexit
+from mdns_announcer import register_mdns_service, unregister_mdns_service
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -72,4 +74,16 @@ def handle_ping_event(data=None):
     emit('pong_event', data)
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=12345, allow_unsafe_werkzeug=True)
+    # Note: mDNS registration is only active when running directly (development mode).
+    # When running with Gunicorn, this block is skipped.
+
+    # Register mDNS service
+    zc, info = register_mdns_service(port=12345)
+
+    # Ensure unregistration on exit
+    atexit.register(unregister_mdns_service, zc, info)
+
+    try:
+        socketio.run(app, host='0.0.0.0', port=12345, allow_unsafe_werkzeug=True)
+    finally:
+        unregister_mdns_service(zc, info)
